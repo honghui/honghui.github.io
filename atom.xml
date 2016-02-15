@@ -4,7 +4,7 @@
   <title><![CDATA[他说]]></title>
   <link href="http://honghui.github.io/atom.xml" rel="self"/>
   <link href="http://honghui.github.io/"/>
-  <updated>2016-02-15T22:37:19+08:00</updated>
+  <updated>2016-02-15T22:41:45+08:00</updated>
   <id>http://honghui.github.io/</id>
   <author>
     <name><![CDATA[honghui]]></name>
@@ -15,7 +15,7 @@
   
   <entry>
     <title type="html"><![CDATA[我的第一个博客]]></title>
-    <link href="http://honghui.github.io/blog/20160216/My-First-Blog.html/"/>
+    <link href="http://honghui.github.io/blog/20160216/My-First-Blog.html"/>
     <updated>2016-02-16T02:26:55+08:00</updated>
     <id>http://honghui.github.io/blog/20160216/My-First-Blog</id>
     <content type="html"><![CDATA[<h2>这是我的第一篇博客</h2>
