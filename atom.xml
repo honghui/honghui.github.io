@@ -4,7 +4,7 @@
   <title><![CDATA[他说]]></title>
   <link href="http://honghui.github.io/atom.xml" rel="self"/>
   <link href="http://honghui.github.io/"/>
-  <updated>2016-03-06T19:55:20+08:00</updated>
+  <updated>2016-03-06T20:24:35+08:00</updated>
   <id>http://honghui.github.io/</id>
   <author>
     <name><![CDATA[honghui]]></name>
@@ -12,5 +12,14 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[My First Blog]]></title>
+    <link href="http://honghui.github.io/blog/20160306/my-first-blog.html"/>
+    <updated>2016-03-06T20:24:42+08:00</updated>
+    <id>http://honghui.github.io/blog/20160306/my-first-blog</id>
+    <content type="html"><![CDATA[
+]]></content>
+  </entry>
   
 </feed>
