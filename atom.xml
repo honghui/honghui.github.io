@@ -4,7 +4,7 @@
   <title><![CDATA[他说]]></title>
   <link href="http://honghui.github.io/atom.xml" rel="self"/>
   <link href="http://honghui.github.io/"/>
-  <updated>2016-03-12T21:52:53+08:00</updated>
+  <updated>2016-03-12T21:57:05+08:00</updated>
   <id>http://honghui.github.io/</id>
   <author>
     <name><![CDATA[honghui]]></name>
@@ -36,15 +36,15 @@ armeabi，armeabi-v7a，arm64-v8a，x86，x86_64，mips，mips64。并且这些�
   <li>据说（仅仅是据说，用 GenyMotion 试验总是失败），x86 设备能够运行某些 arm 的应用</li>
 </ol>
 
-<p>作为游戏程序员，我很懒，而且 mips 系设备数量太少，在项目里基本上不考虑。但不得不考虑 x86 吧。即使不考虑 x86，也得考虑提供给不同设备正确的 so 文件来发挥系统最强能力吧。</p>
+<p>作为游戏程序员，我很懒，而且 mips 系设备数量太少，在项目里基本上不考虑。但不得不考虑 x86。即使不考虑 x86，也得考虑提供给不同设备正确的 so 文件来发挥系统最强能力吧。</p>
 
 <h2 id="section-1">如何同时支持多个架构</h2>
 <p>从各种资料中，我们可以知道，要让同一个包含 so 文件的的 APK 正确的运行在不同架构设备上，只要用 NDK 编译出不同架构的 so 文件，并且打包入 lib 目录即可（恕不详解），同时支持 armeabi 和 x86 的 APK 包 lib 目录结构为：</p>
 
 <pre><code>NDKApplication.apk
-    				lib/
-        				armeabi
-        				x86
+	lib/
+   	armeabi
+      x86
 </code></pre>
 
 <p>那么，支持的架构越多你的 APK 包毫无疑问会越大。当然根据上面的兼容列表，你完全可以用这两个架构来适配 5 种架构。但兼容模式必定会牺牲性能。你不希望你的游戏出现卡顿，不是吗？</p>
