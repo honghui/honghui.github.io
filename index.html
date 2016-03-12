@@ -9,7 +9,7 @@
   <meta name="author" content="honghui">
 
   
-  <meta name="description" content=" Blog Archives 最新文章 ">
+  <meta name="description" content="在开发 Android 应用时，对一些影响性能的计算经常会使用 C/C++ 实现，我们称其为 Native 代码，同时通过 JNI 协调 Java 与 Native，以共同完成应用的功能。很多的游戏引擎，比如 cocos2d-x 就是如此。使用 Native 代码还能使得应用更难被破解。 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -79,6 +79,157 @@
       <div class="blog-index">
   
   
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/20160311/android-xi-tong-ru-he-xuan-ze-native-so.html">Android 系统如何选择 Native SO</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-03-11T14:43:24+08:00'><span class='date'>2016 年3 月11 日</span> <span class='time'>2:43 pm</span></time>
+        
+           | <a href="/blog/20160311/android-xi-tong-ru-he-xuan-ze-native-so.html#disqus_thread"
+             data-disqus-identifier="http://honghui.github.io/blog/20160311/android-xi-tong-ru-he-xuan-ze-native-so.html">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>在开发 Android 应用时，对一些影响性能的计算经常会使用 C/C++ 实现，我们称其为 Native 代码，同时通过 JNI 协调 Java 与 Native，以共同完成应用的功能。很多的游戏引擎，比如 cocos2d-x 就是如此。使用 Native 代码还能使得应用更难被破解。</p>
+
+<p>系统要运行 Native 代码，首先要将 Native 编译成目标 CPU 架构的 so 文件，并通过 System.loadLibrary() 系列函数加载。</p>
+
+<p>不幸的是，由于历史以及商业上的原因，CPU 架构种类已经多达 7 种：
+armeabi，armeabi-v7a，arm64-v8a，x86，x86_64，mips，mips64。并且这些架构的设备是同时存在于市面的（苦逼的 Android 程序员总是要处理适配问题）。</p>
+
+<h2 id="section">架构的兼容情况</h2>
+<p>所有七种架构也不是完全不兼容的，比如：</p>
+
+<ol>
+  <li>armeabi-v7a 设备能够加载 armeabi 指令的 so 文件</li>
+  <li>arm64-v8a 能兼容 armeabi-v7a 和 armeabi 指令集</li>
+  <li>x86_64 兼容 x86</li>
+  <li>mips64 兼容 mips</li>
+  <li>据说（仅仅是据说，用 GenyMotion 试验总是失败），x86 设备能够运行某些 arm 的应用</li>
+</ol>
+
+<p>作为游戏程序员，我很懒，而且 mips 系设备数量太少，在项目里基本上不考虑。但不得不考虑 x86 吧。即使不考虑 x86，也得考虑提供给不同设备正确的 so 文件来发挥系统最强能力吧。</p>
+
+<h2 id="section-1">如何同时支持多个架构</h2>
+<p>从各种资料中，我们可以知道，要让同一个包含 so 文件的的 APK 正确的运行在不同架构设备上，只要用 NDK 编译出不同架构的 so 文件，并且打包入 lib 目录即可（恕不详解），同时支持 armeabi 和 x86 的 APK 包 lib 目录结构为：</p>
+
+<pre><code>NDKApplication.apk
+    				lib/
+        				armeabi
+        				x86
+</code></pre>
+
+<p>那么，支持的架构越多你的 APK 包毫无疑问会越大。当然根据上面的兼容列表，你完全可以用这两个架构来适配 5 种架构。但兼容模式必定会牺牲性能。你不希望你的游戏出现卡顿，不是吗？</p>
+
+<h2 id="so-">系统如何选择 so 文件</h2>
+<p>Android 系统在安装\更新 APK 的时候，会检查 APK lib 目录中的子目录，找到<strong>最合适</strong>的子目录，拷贝到 getApplicationInfo().nativeLibraryDir 目录下，当 load 动态库时到这个目录中查找。</p>
+
+<p>在拷贝时，系统不会去关心子目录下的文件是否正确，是否缺失等等。这些问题只会在 load 的时候报各种各样的 UnsatisfiedLinkError 错误。</p>
+
+<p>与其说是选择 so 文件，不如说是选择正确的 lib 目录。</p>
+
+<p>另外一个题外话，Android 4.x 版本拷贝 lib 目录时存在 bug，会导致没有正确拷贝 so 文件，可以通过 <a href="https://github.com/KeepSafe/ReLinker">ReLinker</a> 解决此问题。</p>
+
+<h2 id="section-2">动态加载，你的终极解决方案</h2>
+<p>当你加上更多的支持架构之后，发现包体的增长已经影响了用户的下载意愿。广告的转化率提不上去啊，运营会找你麻烦的！</p>
+
+<p>可能的一个解决方法是：分别发不同架构的包，让用户自己去选择（太傻了，而且用户哪有那么聪明）。</p>
+
+<p>最好的方案还是动态下载 so 文件，发布的 APK 不包含 Native 代码，启动时根据不同的架构下载相应的 so 文件。</p>
+
+<p>道理很简单，而且网上也有一堆堆的教程，我也不细说。需要注意的是一定要将下载的 so 文件放置在程序目录才可以 load，否则会遇到权限问题。</p>
+
+<h2 id="so--1">如何下载正确的 so 文件？</h2>
+<p>android.os.Build 了 SUPPORTED_ABIS、CPU_ABI 和 CPU_ABI2 等变量方便查询设备支持的架构，其中 SUPPORTED_ABIS 是 API Level 21 引入来代替 CPU_ABI, CPU_ABI2（可能 Google 不想 3、4、5 地一直往上加吧）。</p>
+
+<p>SUPPORTED_ABIS 是一个按优先级排序的数组，越靠前的架构是设备越希望得到的 ABI。</p>
+
+<p>如果目标平台的 API Level 小于 21，只能使用 CPU_ABI 要 CPU_ABI2 来选择了，而 CPU_ABI 要优于 CPU_ABI2。</p>
+
+<p>选择一个你有提供的最优架构给设备下载就可以了。</p>
+
+<p>是不是这样就万事大吉了呢？</p>
+
+<h2 id="supportedabiscpuabi--cpuabi2">关于 SUPPORTED_ABIS、CPU_ABI 和 CPU_ABI2</h2>
+<p>对于一台设备，CPU_ABI 值不是固定不变的，它会根据 APK 的安装情况返回不同的值。我在 Nexus 9（google 亲儿子，arm64-v8a CPU） 上做了个试验。</p>
+
+<p>其中 abiFilters 表示我的 NDKApplication 支持的架构，空表示没有 Native 代码。</p>
+
+<p>dir name 为 getApplicationInfo().nativeLibraryDir 子目录名</p>
+
+<p>SUPPORTED_ABIS 都是 arm64-v8a,armeabi-v7a,armeabi</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>abiFilters</th>
+      <th style="text-align: center">CPU_ABI</th>
+      <th style="text-align: center">CPU_ABI2</th>
+      <th style="text-align: right">dir name</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>armeabi-v7a, arm64-v8a, armeabi</td>
+      <td style="text-align: center">arm64-v8a</td>
+      <td style="text-align: center"> </td>
+      <td style="text-align: right">arm64</td>
+    </tr>
+    <tr>
+      <td>arm64-v8a, armeabi-v7a</td>
+      <td style="text-align: center">arm64-v8a</td>
+      <td style="text-align: center"> </td>
+      <td style="text-align: right">arm64</td>
+    </tr>
+    <tr>
+      <td>arm64-v8a, armeabi</td>
+      <td style="text-align: center">arm64-v8a</td>
+      <td style="text-align: center"> </td>
+      <td style="text-align: right">arm64</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td style="text-align: center">arm64-v8a</td>
+      <td style="text-align: center"> </td>
+      <td style="text-align: right"> </td>
+    </tr>
+    <tr>
+      <td>armeabi</td>
+      <td style="text-align: center">armeabi-v7a</td>
+      <td style="text-align: center">armeabi</td>
+      <td style="text-align: right">arm</td>
+    </tr>
+    <tr>
+      <td>armeabi-v7a</td>
+      <td style="text-align: center">armeabi-v7a</td>
+      <td style="text-align: center">armeabi</td>
+      <td style="text-align: right">arm</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>看上去只有 CPU_ABI 能够表示系统为这个应用选择的 ABI，那 Google 把这个字段废了，以后我们还怎么决定用哪个 ABI 的 so 文件呢？难道 APK 里面连一个 so 文件都不能放？</p>
+
+</div>
+  
+  
+
+
+    </article>
+  
   <div class="pagination">
     
     <a href="/blog/archives">Blog Archives</a>
@@ -90,6 +241,10 @@
     <section>
   <h1>最新文章</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/20160311/android-xi-tong-ru-he-xuan-ze-native-so.html">Android 系统如何选择 Native SO</a>
+      </li>
     
   </ul>
 </section>
